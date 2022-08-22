@@ -12,22 +12,28 @@ from datetime import date
 current_date = date.today()
 
 #Read CSV File
-def read_CSV(file, json_file):
-    csv_rows = []
-    INSERtstmt_Original = ''
-    RtnINSERtstmt = ''
-    with open(file, encoding="utf8") as csvfile:
-        reader = csv.DictReader(csvfile)
-        field = reader.fieldnames
-        for row in reader:
-            csv_rows.extend([{field[i]:row[field[i]] for i in range(len(field))}])
-        convert_write_json(csv_rows, json_file)
-        RtnINSERtstmt = Generate_insert_script(json_file)
-        INSERtstmt_Original=INSERtstmt_Original + " \n "+RtnINSERtstmt
-    jf = r'E:\mig_{}.sql'.format(json_file)
-    f= open( jf,"w+",encoding="utf8")
-    f.write(INSERtstmt_Original)
-    f.close()
+def read_CSV(file, json_file,path):
+
+
+	#print(path)
+
+	csv_rows = []
+	INSERtstmt_Original = ''
+	RtnINSERtstmt = ''
+	with open(file, encoding="utf8") as csvfile:
+		reader = csv.DictReader(csvfile)
+		field = reader.fieldnames
+		for row in reader:
+			csv_rows.extend([{field[i]:row[field[i]] for i in range(len(field))}])
+		convert_write_json(csv_rows, json_file)
+		RtnINSERtstmt = Generate_insert_script(json_file)
+		INSERtstmt_Original=INSERtstmt_Original + " \n "+RtnINSERtstmt
+		
+	jf = r'{}\mig_{}.sql'.format(path,json_file)
+
+	f= open( jf,"w+",encoding="utf8")
+	f.write(INSERtstmt_Original)
+	f.close()
 
 
     
@@ -82,9 +88,12 @@ def Generate_insert_script(json_file):
 uploaded_files = st.file_uploader("Choose a XLSX file", accept_multiple_files=True)
 for uploaded_file in uploaded_files:
 	bytes_data = uploaded_file.read()
-	st.write("filename:", uploaded_file.name)
+	xl_name = uploaded_file.name.split('.')[0]
+	st.write("filename:", xl_name)
 	
-	
+	parent_dir = "D:/"
+	path = os.path.join(parent_dir, xl_name)
+	os.mkdir(path)
 	df = pd.DataFrame()
 	#xlfname = r"E:\Loadsheet\Flora Express_Loadsheet_v1.7.xlsx"
 	xl = pd.ExcelFile(bytes_data)
@@ -97,13 +106,59 @@ for uploaded_file in uploaded_files:
 		#print(csvfile)
 		df_tmp = df.append(df_tmp, ignore_index=True)
 		df_tmp.to_csv(csvfile, index=False)
-		read_CSV(csvfile,json_file)
+		read_CSV(csvfile,json_file,path)
 
     
-if os.path.exists(r'E:\Loadsheet\Insert Script\mig_Parameter.sql'):
-    os.remove(r'E:\Loadsheet\Insert Script\mig_Parameter.sql')
+
 	
 	
  #------------------------------ db ------------------------------#
+import os
+import mysql.connector
+import streamlit as st
+
+
+# Create a simple button that does nothing
+if st.button("Upload to DM"):
+	mydb = mysql.connector.connect(
+	  host="70.204.0.16",
+	  user="temp_pms",
+	  password="Pmsmack@123@123",
+	  database = "python_loadsheet"
+	)
+	mycursor = mydb.cursor()
+
+	url = r"E:\Loadsheet\Insert Script"
+
+	for root, dirs, files in os.walk(url):
+		for file in files:
+			if file.endswith('.sql'):
+				file_names = file.split('.')[0]
+				
+				file_path = ('{}\{}.sql').format(url,file_names)
+				sql_file = open(file_path, encoding="utf8").read()
+				quries_list = sql_file.split('\n')
+
+				emp = ''
+				for x in quries_list:
+					q = x.replace('\n',"")
+					if q == '':
+						pass
+					else:
+						emp += q 
+
+
+				url_name = os.path.basename(file_path)
+				file_name = os.path.splitext(url_name)[0]
+
+				mycursor = mydb.cursor()
+				mycursor.execute('truncate table {}'.format(file_name))
+				mycursor.execute(emp)
+				st.info(file_name)
+				#print(file_name, mycursor.rowcount, "record inserted.")
+				mydb.commit()
+				
+	st.success("Script successfully uploaded !!!")
+	
 
 st.snow()
