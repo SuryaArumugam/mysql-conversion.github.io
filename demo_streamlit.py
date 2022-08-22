@@ -24,7 +24,7 @@ def read_CSV(file, json_file):
         convert_write_json(csv_rows, json_file)
         RtnINSERtstmt = Generate_insert_script(json_file)
         INSERtstmt_Original=INSERtstmt_Original + " \n "+RtnINSERtstmt
-    jf = r'E:mig_{}.sql'.format(json_file)
+    jf = r'E:\mig_{}.sql'.format(json_file)
     f= open( jf,"w+",encoding="utf8")
     f.write(INSERtstmt_Original)
     f.close()
