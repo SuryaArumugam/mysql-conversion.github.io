@@ -110,8 +110,6 @@ for uploaded_file in uploaded_files:
 
     
 
-	
-	
  #------------------------------ db ------------------------------#
 
 st.snow()
