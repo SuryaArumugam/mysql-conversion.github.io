@@ -9,8 +9,6 @@ import pandas as pd
 import json as json
 from datetime import date
 
-current_date = date.today()
-
 #Read CSV File
 def read_CSV(file, json_file,path):
 
@@ -30,11 +28,12 @@ def read_CSV(file, json_file,path):
 		INSERtstmt_Original=INSERtstmt_Original + " \n "+RtnINSERtstmt
 		
 	jf = r'{}\mig_{}.sql'.format(path,json_file)
-
 	f= open( jf,"w+",encoding="utf8")
 	f.write(INSERtstmt_Original)
+	st.success(json_file+' '+'Script Successfully created')
 	f.close()
-
+	
+	
 
     
 #Convert csv data into json
@@ -94,22 +93,16 @@ for uploaded_file in uploaded_files:
 	parent_dir = "D:/"
 	path = os.path.join(parent_dir, xl_name)
 	os.mkdir(path)
+	
 	df = pd.DataFrame()
-	#xlfname = r"E:\Loadsheet\Flora Express_Loadsheet_v1.7.xlsx"
 	xl = pd.ExcelFile(bytes_data)
 	for sheet in xl.sheet_names:
 		df_tmp = xl.parse(sheet)
-		#print(sheet)
 		csvfile = sheet+'.csv'
 		json_file = sheet
-		
-		#print(csvfile)
 		df_tmp = df.append(df_tmp, ignore_index=True)
 		df_tmp.to_csv(csvfile, index=False)
 		read_CSV(csvfile,json_file,path)
-
-    
-
- #------------------------------ db ------------------------------#
+		
 
 st.snow()
