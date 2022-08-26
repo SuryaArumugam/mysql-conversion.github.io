@@ -41,6 +41,7 @@ def sql_file(data,path,sheet):
 		
 		
 uploaded_files = st.file_uploader("Choose a XLSX file", accept_multiple_files=True)
+
 for uploaded_file in uploaded_files:
 	bytes_data = uploaded_file.read()
 	xl_name = uploaded_file.name.split('.')[0]
@@ -51,8 +52,8 @@ for uploaded_file in uploaded_files:
 	os.mkdir(path)
 			
 	df = pd.DataFrame()
-	#xlfname = r"E:\Loadsheet\GCD2.xlsx"
 	xl = pd.ExcelFile(bytes_data)
+
 	for sheet in xl.sheet_names:
 		df_tmp = xl.parse(sheet)
-		sql_file(df_tmp,path,sheet)
+		sql_file(df_tmp,sheet,path)
