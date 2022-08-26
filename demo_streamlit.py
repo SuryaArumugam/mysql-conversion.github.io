@@ -1,89 +1,45 @@
 
 
-
-# import the streamlit library
-import streamlit as st
-import csv
 import os
 import pandas as pd
-import json as json
-from datetime import date
-
-#Read CSV File
-def read_CSV(file, json_file,path):
+import streamlit as st
 
 
-	#print(path)
-
-	csv_rows = []
-	INSERtstmt_Original = ''
-	RtnINSERtstmt = ''
-	with open(file, encoding="utf8") as csvfile:
-		reader = csv.DictReader(csvfile)
-		field = reader.fieldnames
-		for row in reader:
-			csv_rows.extend([{field[i]:row[field[i]] for i in range(len(field))}])
-		convert_write_json(csv_rows, json_file)
-		RtnINSERtstmt = Generate_insert_script(json_file)
-		INSERtstmt_Original=INSERtstmt_Original + " \n "+RtnINSERtstmt
-		
-	jf = r'{}\mig_{}.sql'.format(path,json_file)
-	f= open( jf,"w+",encoding="utf8")
-	f.write(INSERtstmt_Original)
-	st.success(json_file+' '+'Script Successfully created')
-	f.close()
-	
-	
+def sql_file(data,path,sheet):
+    table_name = '`{}`'.format(sheet)
 
     
-#Convert csv data into json
-def convert_write_json(data, json_file):
-    with open(json_file, "w" ,encoding="utf8") as f:
-        f.write(json.dumps(data, sort_keys=False, indent=4, separators=(',', ': '))) #for pretty
+    column_name = ''
+    for col in data.columns:
+        column_name += "`{}`,".format(col)
+    column_name = column_name[:-1]
+    column_values = "({})".format(column_name)
 
 
-#Convent Json to MySQL
-def Generate_insert_script(json_file):
-    TABLE_NAME = "`mig_{}`".format(json_file)
-
-    sqlstatement = ''
-    
-    INSERtstmt = ''
-    with open (json_file,'r') as f:
-        jsondata = json.loads(f.read().replace("'",''))
+    row_name = "("+''
+    for ro in data.values:
+        strng = str(ro)
+        s = "("
         
-    for jsonval in jsondata:
-        keylist = "("
-        valuelist = "("
-        firstPair = True
-        for key, value in jsonval.items():
-            if not firstPair:
-                keylist += ", "
-                valuelist += ", "
-            firstPair = False
+        for j in ro:  
+            row_name +="'{}',".format(str(j))
 
-
-            if  isinstance(value, str):
-                valuelist += "'" + value + "'"
-                decoded = False
-            if  isinstance(key, str):
-                keylist += "`" + key + "`"
-                decoded = False
-            else:
-                valuelist += unicode_or_str.decode(value)
-                decoded = True
-                keylist += unicode_or_str.decode(key)
-                decoded = True
-                
-        keylist += ")"
-        valuelist += ")"
-        sqlstatement +=  valuelist + ",\n"
-    sqlstatement = sqlstatement[:-1]
+        row_name = row_name[:-1]
+        e = "),"
+        row_name = row_name.replace('nan','') 
+        row_name += e+'\n'
+        row_name += s
     
-    INSERtstmt= "INSERT INTO " + TABLE_NAME + " " + keylist + " VALUES "+'\n' +sqlstatement[:-1] +';'
-    return INSERtstmt
+    sql_script = 'INSERT INTO'+' '+table_name+' '+column_values+' '+'values\n'+''+row_name[:-3] +';'
 
-	
+    jf = r'{}\mig_{}.sql'.format(path,sheet)   
+    #jf = r'E:\Loadsheet\Insert Script\{}.sql'.format(sheet)
+    f= open( jf,"w+",encoding="utf8")
+    f.write(sql_script)
+    f.close()
+        
+		
+		
 uploaded_files = st.file_uploader("Choose a XLSX file", accept_multiple_files=True)
 for uploaded_file in uploaded_files:
 	bytes_data = uploaded_file.read()
@@ -93,16 +49,10 @@ for uploaded_file in uploaded_files:
 	parent_dir = "D:/"
 	path = os.path.join(parent_dir, xl_name)
 	os.mkdir(path)
-	
+			
 	df = pd.DataFrame()
+	#xlfname = r"E:\Loadsheet\GCD2.xlsx"
 	xl = pd.ExcelFile(bytes_data)
 	for sheet in xl.sheet_names:
 		df_tmp = xl.parse(sheet)
-		csvfile = sheet+'.csv'
-		json_file = sheet
-		df_tmp = df.append(df_tmp, ignore_index=True)
-		df_tmp.to_csv(csvfile, index=False)
-		read_CSV(csvfile,json_file,path)
-		
-
-st.snow()
+		sql_file(df_tmp,path,sheet)
