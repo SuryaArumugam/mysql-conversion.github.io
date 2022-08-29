@@ -1,14 +1,10 @@
-
-
 import os
 import pandas as pd
 import streamlit as st
 
-
-def sql_file(data,path,sheet):
+def sql_file(data,sheet,path):
     table_name = '`{}`'.format(sheet)
-
-    
+  
     column_name = ''
     for col in data.columns:
         column_name += "`{}`,".format(col)
@@ -32,28 +28,29 @@ def sql_file(data,path,sheet):
     
     sql_script = 'INSERT INTO'+' '+table_name+' '+column_values+' '+'values\n'+''+row_name[:-3] +';'
 
-    jf = r'{}\mig_{}.sql'.format(path,sheet)   
-    #jf = r'E:\Loadsheet\Insert Script\{}.sql'.format(sheet)
+        
+    jf = r'{}\{}.sql'.format(path,sheet)
     f= open( jf,"w+",encoding="utf8")
     f.write(sql_script)
+    #st.success(json_file+' '+'Script Successfully created')
     f.close()
-        
-		
-		
-uploaded_files = st.file_uploader("Choose a XLSX file", accept_multiple_files=True)
 
+ 
+
+uploaded_files = st.file_uploader("Choose a XLSX file", accept_multiple_files=True)
 for uploaded_file in uploaded_files:
 	bytes_data = uploaded_file.read()
 	xl_name = uploaded_file.name.split('.')[0]
-	st.write("filename:", xl_name)
-	
+	st.write("filename:", xl_name) 
+
+
+	df = pd.DataFrame()
 	parent_dir = "D:/"
 	path = os.path.join(parent_dir, xl_name)
 	os.mkdir(path)
-			
-	df = pd.DataFrame()
-	xl = pd.ExcelFile(bytes_data)
 
+	xl = pd.ExcelFile(bytes_data)
 	for sheet in xl.sheet_names:
 		df_tmp = xl.parse(sheet)
 		sql_file(df_tmp,sheet,path)
+st.snow()
