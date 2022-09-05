@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 
 
-def sql_file(data,sheet,path):
+def sql_file(data,sheet,create_path):
     table_name = '`{}`'.format(sheet)
   
     column_name = ''
@@ -30,7 +30,7 @@ def sql_file(data,sheet,path):
     sql_script = 'INSERT INTO'+' '+table_name+' '+column_values+' '+'values\n'+''+row_name[:-3] +';'
 
         
-    jf = r'{}\{}.sql'.format(path,sheet)
+    jf = r'{}\{}.sql'.format(create_path,sheet)
     f= open( jf,"w+",encoding="utf8")
     f.write(sql_script.getbuffer)
     #st.success(json_file+' '+'Script Successfully created')
@@ -54,4 +54,3 @@ for uploaded_file in uploaded_files:
 	for sheet in xl.sheet_names:
 		df_tmp = xl.parse(sheet)
 		sql_file(df_tmp,sheet,create_path)
-st.snow()
