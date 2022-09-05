@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import streamlit as st
 
+
 def sql_file(data,sheet,path):
     table_name = '`{}`'.format(sheet)
   
@@ -22,7 +23,7 @@ def sql_file(data,sheet,path):
 
         row_name = row_name[:-1]
         e = "),"
-        row_name = row_name.replace('nan','') 
+        row_name = row_name.replace('NULL','NULL') 
         row_name += e+'\n'
         row_name += s
     
@@ -31,7 +32,7 @@ def sql_file(data,sheet,path):
         
     jf = r'{}\{}.sql'.format(path,sheet)
     f= open( jf,"w+",encoding="utf8")
-    f.write(sql_script)
+    f.write(sql_script.getbuffer)
     #st.success(json_file+' '+'Script Successfully created')
     f.close()
 
@@ -47,10 +48,10 @@ for uploaded_file in uploaded_files:
 	df = pd.DataFrame()
 	parent_dir = "D:/"
 	path = os.path.join(parent_dir, xl_name)
-	os.mkdir(path)
+	create_path = os.mkdir(path)
 
 	xl = pd.ExcelFile(bytes_data)
 	for sheet in xl.sheet_names:
 		df_tmp = xl.parse(sheet)
-		sql_file(df_tmp,sheet,path)
+		sql_file(df_tmp,sheet,create_path)
 st.snow()
